@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Top 10 Morceaux</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #f5f5f7;
+      --card: #ffffff;
+      --accent: #fa2d55;
+      --accent2: #ff6b9d;
+      --text: #1a1a2e;
+      --muted: #8e8ea0;
+      --border: rgba(0,0,0,0.07);
+      --shadow: 0 4px 20px rgba(0,0,0,0.08);
+      --shadow-hover: 0 12px 40px rgba(0,0,0,0.16);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      display: block;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+    }
+
+    header {
+      padding: 36px 40px 24px;
+      text-align: center;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(250,45,85,0.08);
+      border: 1px solid rgba(250,45,85,0.2);
+      border-radius: 100px;
+      padding: 4px 14px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .logo-badge::before { content: '♪'; font-size: 13px; }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-weight: 900;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    h1 span {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .subtitle { color: var(--muted); font-size: 13px; }
+
+    /* ── GRID ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      padding: 30px 40px 60px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s;
+      animation: fadeUp 0.4s ease both;
+      box-shadow: var(--shadow);
+    }
+    .card:hover { transform: translateY(-5px); box-shadow: var(--shadow-hover); }
+    .card.active { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(250,45,85,0.2); transform: translateY(-5px); }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(20px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .card:nth-child(1)  { animation-delay:.05s }
+    .card:nth-child(2)  { animation-delay:.10s }
+    .card:nth-child(3)  { animation-delay:.15s }
+    .card:nth-child(4)  { animation-delay:.20s }
+    .card:nth-child(5)  { animation-delay:.25s }
+    .card:nth-child(6)  { animation-delay:.30s }
+    .card:nth-child(7)  { animation-delay:.35s }
+    .card:nth-child(8)  { animation-delay:.40s }
+    .card:nth-child(9)  { animation-delay:.45s }
+    .card:nth-child(10) { animation-delay:.50s }
+
+    /* Album image */
+    .card-thumb {
+      width: 100%;
+      aspect-ratio: 1/1;
+      position: relative;
+      overflow: hidden;
+      background: #e0e0e8;
+    }
+    .card-thumb img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.4s ease;
+    }
+    .card:hover .card-thumb img,
+    .card.active .card-thumb img { transform: scale(1.06); }
+
+    /* Dark overlay on hover/active */
+    .thumb-overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0);
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.3s;
+    }
+    .card:hover .thumb-overlay,
+    .card.active .thumb-overlay { background: rgba(0,0,0,0.38); }
+
+    /* Big play/pause button centered on image */
+    .play-circle {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 18px;
+      opacity: 0;
+      transform: scale(0.75);
+      transition: opacity 0.25s, transform 0.25s;
+      box-shadow: 0 4px 20px rgba(250,45,85,0.55);
+      user-select: none;
+    }
+    .card:hover .play-circle,
+    .card.active .play-circle { opacity: 1; transform: scale(1); }
+
+    /* Rank badge */
+    .rank-ribbon {
+      position: absolute; top: 8px; left: 8px;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 2;
+    }
+    .rank-1 { background: linear-gradient(135deg,#ffd700,#ffaa00); color:#5a3e00; }
+    .rank-2 { background: linear-gradient(135deg,#c0c0c0,#909090); color:#333; }
+    .rank-3 { background: linear-gradient(135deg,#cd7f32,#a0522d); color:#fff; }
+    .rank-other { background: rgba(0,0,0,0.55); color:#fff; }
+
+    /* Equalizer bars (visible when active) */
+    .eq-icon {
+      position: absolute; bottom: 8px; right: 8px;
+      display: none; gap: 2px; align-items: flex-end; height: 16px; z-index: 2;
+    }
+    .card.active .eq-icon { display: flex; }
+    .eq-bar {
+      width: 3px; background: #fff; border-radius: 2px;
+      animation: eq 0.6s ease-in-out infinite alternate;
+    }
+    .eq-bar:nth-child(1) { height:6px;  animation-delay:0s }
+    .eq-bar:nth-child(2) { height:14px; animation-delay:.15s }
+    .eq-bar:nth-child(3) { height:10px; animation-delay:.3s }
+    .eq-bar:nth-child(4) { height:16px; animation-delay:.1s }
+    @keyframes eq {
+      from { transform: scaleY(0.3); }
+      to   { transform: scaleY(1); }
+    }
+    .card.paused .eq-icon { display: flex; }
+    .card.paused .eq-bar  { animation-play-state: paused; }
+
+    /* Card body */
+    .card-body { padding: 11px 12px 0; }
+
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 12.5px; font-weight: 700; line-height: 1.3;
+      color: var(--text); margin-bottom: 3px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .card-artist {
+      font-size: 11px; color: var(--muted); margin-bottom: 8px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .rank-score { font-size: 10px; color: var(--muted); padding-bottom: 10px; display: block; }
+
+    /* ── INLINE PLAYER (inside card, hidden by default) ── */
+    .card-player {
+      display: none;
+      padding: 10px 12px 12px;
+      border-top: 1px solid var(--border);
+      background: #fafafa;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .card.active .card-player { display: flex; }
+
+    /* Time row */
+    .player-times {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    /* Progress bar */
+    .progress-track {
+      width: 100%;
+      height: 4px;
+      background: #e0e0e8;
+      border-radius: 10px;
+      cursor: pointer;
+      position: relative;
+      overflow: visible;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      transition: width 0.2s linear;
+      pointer-events: none;
+      position: relative;
+    }
+    /* Moving dot at end of fill */
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      right: -5px; top: 50%;
+      transform: translateY(-50%);
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 6px rgba(250,45,85,0.6);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .card.active .progress-fill::after { opacity: 1; }
+
+    /* Play/pause mini button row */
+    .player-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .btn-mini {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 12px;
+      transition: transform 0.2s, background 0.2s;
+      flex-shrink: 0;
+    }
+    .btn-mini:hover { transform: scale(1.1); background: var(--accent2); }
+
+    /* Loading */
+    #loading {
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: var(--bg); z-index: 100; gap: 14px;
+    }
+    .spinner {
+      width: 34px; height: 34px;
+      border: 3px solid rgba(250,45,85,0.15);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loading p { color: var(--muted); font-size: 13px; }
+
+    #error {
+      display: none; position: fixed; inset: 0;
+      align-items: center; justify-content: center;
+      background: var(--bg); z-index: 100;
+      flex-direction: column; gap: 10px; text-align: center; padding: 40px;
+    }
+    #error h2 { color: var(--accent); font-family:'Playfair Display',serif; }
+    #error p  { color: var(--muted); font-size: 13px; }
+
+    @media (max-width: 1024px) { .grid { grid-template-columns: repeat(4,1fr); } }
+    @media (max-width: 768px)  { .grid { grid-template-columns: repeat(3,1fr); padding: 20px; } header { padding: 24px 20px 18px; } }
+    @media (max-width: 500px)  { .grid { grid-template-columns: repeat(2,1fr); gap: 12px; } }
+  </style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <p>Chargement du classement…</p>
+</div>
+<div id="error">
+  <h2>Impossible de charger</h2>
+  <p>Vérifie que ton serveur tourne sur <code>localhost:3000</code></p>
+</div>
+
+<header>
+  <div class="logo-badge">Deezer Charts</div>
+  <h1>Classement des <span>morceaux</span></h1>
+  <p class="subtitle">Les 10 titres les plus populaires en ce moment</p>
+</header>
+
+<div class="grid" id="grid"></div>
+
+<audio id="audio"></audio>
+
+<script>
+  function rankClass(n) {
+    if (n === 1) return 'rank-1';
+    if (n === 2) return 'rank-2';
+    if (n === 3) return 'rank-3';
+    return 'rank-other';
+  }
+
+  function formatRank(s) { return Number(s).toLocaleString('fr-FR'); }
+
+  function formatTime(s) {
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2,'0')}`;
+  }
+
+  function buildCard(track, index) {
+    const pos    = index + 1;
+    const rClass = rankClass(pos);
+    const img    = track.image || '';
+
+    return `
+      <div class="card" data-index="${index}">
+        <div class="card-thumb">
+          ${img
+            ? `<img src="${img}" alt="${track.title}" loading="lazy"/>`
+            : `<div style="width:100%;height:100%;background:linear-gradient(160deg,#ede0f7,#d4b8ef);display:flex;align-items:center;justify-content:center;font-size:2.5rem;">♪</div>`
+          }
+          <div class="thumb-overlay">
+            <div class="play-circle" id="play-circle-${index}">▶</div>
+          </div>
+          <div class="rank-ribbon ${rClass}">${pos}</div>
+          <div class="eq-icon">
+            <div class="eq-bar"></div><div class="eq-bar"></div>
+            <div class="eq-bar"></div><div class="eq-bar"></div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-title" title="${track.title}">${track.title}</div>
+          <div class="card-artist" title="${track.artist}">${track.artist}</div>
+          <span class="rank-score">${formatRank(track.rank)} pts</span>
+        </div>
+        <!-- Inline player -->
+        <div class="card-player" id="player-${index}">
+          <div class="player-row">
+            <button class="btn-mini" id="btn-${index}">▶</button>
+          </div>
+          <div class="progress-track" id="track-${index}">
+            <div class="progress-fill" id="fill-${index}"></div>
+          </div>
+          <div class="player-times">
+            <span id="cur-${index}">0:00</span>
+            <span id="dur-${index}">0:30</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /* ── AUDIO ENGINE ── */
+  const audio = document.getElementById('audio');
+  let tracks  = [];
+  let current = -1;
+  let activeCard = null;
+
+  function getCard(i)  { return document.querySelector(`.card[data-index="${i}"]`); }
+  function getBtn(i)   { return document.getElementById(`btn-${i}`); }
+  function getFill(i)  { return document.getElementById(`fill-${i}`); }
+  function getCur(i)   { return document.getElementById(`cur-${i}`); }
+  function getDur(i)   { return document.getElementById(`dur-${i}`); }
+  function getTrack(i) { return document.getElementById(`track-${i}`); }
+  function getCircle(i){ return document.getElementById(`play-circle-${i}`); }
+
+  function setBtn(i, playing) {
+    const b = getBtn(i);
+    const c = getCircle(i);
+    if (!b) return;
+    b.textContent = playing ? '⏸' : '▶';
+    if (c) c.textContent = playing ? '⏸' : '▶';
+  }
+
+  function deactivate(i) {
+    if (i < 0) return;
+    const card = getCard(i);
+    if (card) { card.classList.remove('active','paused'); }
+    setBtn(i, false);
+    const fill = getFill(i);
+    if (fill) fill.style.width = '0%';
+    const cur = getCur(i);
+    if (cur) cur.textContent = '0:00';
+  }
+
+  function playTrack(i) {
+    const track = tracks[i];
+    if (!track || !track.preview) {
+      alert('Pas de preview disponible pour ce morceau.');
+      return;
+    }
+
+    // Stop previous
+    if (current !== -1 && current !== i) {
+      deactivate(current);
+    }
+
+    current    = i;
+    activeCard = getCard(i);
+    activeCard.classList.remove('paused');
+    activeCard.classList.add('active');
+
+    if (audio.src !== track.preview) {
+      audio.src = track.preview;
+    }
+    audio.play();
+    setBtn(i, true);
+  }
+
+  function togglePlay(i) {
+    if (current === i && !audio.paused) {
+      audio.pause();
+      setBtn(i, false);
+      getCard(i).classList.add('paused');
+    } else {
+      playTrack(i);
+    }
+  }
+
+  /* Progress update */
+  audio.addEventListener('timeupdate', () => {
+    if (!audio.duration || current < 0) return;
+    const pct = (audio.currentTime / audio.duration) * 100;
+    const fill = getFill(current);
+    if (fill) fill.style.width = pct + '%';
+    const cur = getCur(current);
+    if (cur) cur.textContent = formatTime(audio.currentTime);
+    const dur = getDur(current);
+    if (dur && audio.duration) dur.textContent = formatTime(audio.duration);
+  });
+
+  /* End of track */
+  audio.addEventListener('ended', () => {
+    if (current < 0) return;
+    setBtn(current, false);
+    getCard(current).classList.add('paused');
+    const fill = getFill(current);
+    if (fill) fill.style.width = '0%';
+    const cur = getCur(current);
+    if (cur) cur.textContent = '0:00';
+  });
+
+  /* ── LOAD ── */
+  async function load() {
+    try {
+      const res = await fetch('http://localhost:3000/top10');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      tracks = await res.json();
+
+      document.getElementById('loading').style.display = 'none';
+      const grid = document.getElementById('grid');
+      grid.innerHTML = tracks.map((t, i) => buildCard(t, i)).join('');
+
+      // Card click → play/pause
+      grid.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('click', (e) => {
+          // Don't retrigger if clicking on progress bar or mini button
+          if (e.target.closest('.progress-track') || e.target.closest('.btn-mini')) return;
+          const i = parseInt(card.dataset.index);
+          togglePlay(i);
+        });
+      });
+
+      // Mini play/pause buttons
+      grid.querySelectorAll('.btn-mini').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const i = parseInt(btn.id.replace('btn-',''));
+          togglePlay(i);
+        });
+      });
+
+      // Seek on progress bar click
+      grid.querySelectorAll('.progress-track').forEach(pt => {
+        pt.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const i = parseInt(pt.id.replace('track-',''));
+          if (current !== i || !audio.duration) return;
+          const rect = pt.getBoundingClientRect();
+          const pct  = (e.clientX - rect.left) / rect.width;
+          audio.currentTime = pct * audio.duration;
+        });
+      });
+
+    } catch (e) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error').style.display   = 'flex';
+      console.error(e);
+    }
+  }
+
+  load();
+</script>
+</body>
+</html>
